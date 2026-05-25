@@ -5,6 +5,7 @@ import {
 } from "@/lib/schemas/cognition";
 import { formatRubricForPrompt } from "@/lib/evaluation/rubric";
 import { calculateOverallScore } from "@/lib/evaluation/calculateOverallScore";
+import { normalizeEvaluation } from "@/lib/evaluation/normalizeEvaluation";
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -76,7 +77,7 @@ Required structure:
 
   const raw = JSON.parse(response.choices[0].message.content || "{}");
 
-  const validated = EvaluationOutputSchema.parse(raw);
+  const validated = normalizeEvaluation(EvaluationOutputSchema.parse(raw));
   
   const overallUnderstandingScore = calculateOverallScore(
     validated.dimensionEvaluations.map((dimension) => dimension.score)

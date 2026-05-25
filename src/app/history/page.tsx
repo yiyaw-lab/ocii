@@ -6,122 +6,96 @@ export default async function HistoryPage() {
   return (
     <main className="min-h-screen bg-neutral-950 px-6 py-10 text-white">
       <div className="mx-auto max-w-5xl space-y-6">
-        <div>
+        <header>
           <p className="text-sm uppercase tracking-[0.25em] text-neutral-500">
             OCII
           </p>
-
           <h1 className="text-4xl font-semibold tracking-tight">
             Cognitive Timeline
           </h1>
-
           <p className="mt-2 text-neutral-400">
-            Longitudinal cognition history across evaluations.
+            Longitudinal record of understanding, calibration, and transfer.
           </p>
-        </div>
+        </header>
 
         <div className="space-y-4">
-          {evaluations.map((evaluation) => (
-            <div
-              key={evaluation.id}
-              className="rounded-3xl border border-neutral-800 bg-neutral-900 p-6"
-            >
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm text-neutral-500">
-                    {new Date(
-                      evaluation.created_at
-                    ).toLocaleString()}
-                  </p>
+          {evaluations.map((evaluation) => {
+            const score =
+              evaluation.overall_understanding_score ??
+              evaluation.understanding_score ??
+              "—";
 
-                  <h2 className="mt-1 text-2xl font-semibold">
-                    {evaluation.concept}
-                  </h2>
+            const summary = evaluation.summary ?? {};
+            const dimensions = evaluation.dimension_evaluations ?? [];
+
+            return (
+              <article
+                key={evaluation.id}
+                className="rounded-3xl border border-neutral-800 bg-neutral-900 p-6"
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm text-neutral-500">
+                      {new Date(evaluation.created_at).toLocaleString()}
+                    </p>
+                    <h2 className="mt-1 text-2xl font-semibold">
+                      {evaluation.concept}
+                    </h2>
+                  </div>
+
+                  <div className="rounded-2xl bg-neutral-950 px-4 py-3 text-center">
+                    <p className="text-xs text-neutral-500">Score</p>
+                    <p className="text-2xl font-semibold">{score}</p>
+                    <p className="text-xs text-neutral-500">/100</p>
+                  </div>
                 </div>
 
-                <div className="rounded-2xl bg-neutral-950 px-4 py-3 text-center">
-                  <p className="text-xs text-neutral-500">
-                    Understanding
-                  </p>
+                {evaluation.related_concepts?.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {evaluation.related_concepts.map((concept: string) => (
+                      <span
+                        key={concept}
+                        className="rounded-full border border-neutral-700 bg-neutral-950 px-3 py-1 text-xs text-neutral-300"
+                      >
+                        {concept}
+                      </span>
+                    ))}
+                  </div>
+                )}
 
-                  <p className="text-2xl font-semibold">
-                    {evaluation.understanding_score}
+                {dimensions.length > 0 && (
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    {dimensions.slice(0, 3).map((dimension: any) => (
+                      <div
+                        key={dimension.dimension}
+                        className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4"
+                      >
+                        <p className="text-xs uppercase tracking-wide text-neutral-500">
+                          {dimension.dimension.replaceAll("_", " ")}
+                        </p>
+                        <p className="mt-2 text-2xl font-semibold">
+                          {Number(dimension.score).toFixed(1)}/5
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div className="mt-5 rounded-2xl border border-neutral-800 bg-neutral-950 p-4">
+                  <p className="text-xs uppercase tracking-wide text-neutral-500">
+                    Feedback
+                  </p>
+                  <p className="mt-2 leading-relaxed text-neutral-100">
+                    {summary.overallFeedback ??
+                      evaluation.feedback ??
+                      "No feedback saved."}
                   </p>
                 </div>
-              </div>
-
-              <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                <Metric
-                  label="Retrieval"
-                  value={evaluation.retrieval_quality}
-                />
-
-                <Metric
-                  label="Reasoning"
-                  value={evaluation.reasoning_clarity}
-                />
-
-                <Metric
-                  label="Transfer"
-                  value={evaluation.transfer_readiness}
-                />
-
-                <Metric
-                  label="Confidence"
-                  value={evaluation.confidence}
-                />
-              </div>
-
-              <div className="mt-5 space-y-3">
-                <Block
-                  title="Feedback"
-                  text={evaluation.feedback}
-                />
-
-                <Block
-                  title="Next Prompt"
-                  text={evaluation.next_prompt}
-                />
-              </div>
-            </div>
-          ))}
+              </article>
+            );
+          })}
         </div>
       </div>
     </main>
-  );
-}
-
-function Metric({
-  label,
-  value,
-}: {
-  label: string;
-  value: number;
-}) {
-  return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4">
-      <p className="text-sm text-neutral-500">{label}</p>
-      <p className="mt-2 text-2xl font-semibold">{value}</p>
-    </div>
-  );
-}
-
-function Block({
-  title,
-  text,
-}: {
-  title: string;
-  text: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4">
-      <p className="text-sm font-medium text-neutral-500">
-        {title}
-      </p>
-
-      <p className="mt-2 leading-relaxed text-neutral-100">
-        {text}
-      </p>
-    </div>
   );
 }
