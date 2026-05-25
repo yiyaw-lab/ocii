@@ -65,7 +65,7 @@ export default async function HistoryPage() {
 
                 {dimensions.length > 0 && (
                   <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {dimensions.slice(0, 3).map((dimension: any) => (
+                    {dimensions.slice(0, 3).map((dimension: { dimension: string; score: number }) => (
                       <div
                         key={dimension.dimension}
                         className="rounded-2xl border border-neutral-800 bg-neutral-950 p-4"
