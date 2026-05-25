@@ -310,3 +310,16 @@ export function formatCompactRubricForPrompt() {
       })
       .join("\n");
   }
+
+export const QUICK_DIMENSIONS: RubricDimension[] = [
+  "conceptual_accuracy",
+  "mechanistic_reasoning",
+  "retrieval_robustness",
+];
+
+export function formatQuickRubricForPrompt() {
+  return cognitionRubric
+    .filter((c) => QUICK_DIMENSIONS.includes(c.dimension))
+    .map((c) => `${c.dimension}: ${c.description}\nScore 0–5.`)
+    .join("\n\n");
+}
