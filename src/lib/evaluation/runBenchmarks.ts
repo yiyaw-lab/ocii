@@ -5,6 +5,7 @@ import { scoreBenchmarkResult } from "@/lib/evaluation/scoreBenchmarkResult";
 type BenchmarkScore = ReturnType<typeof scoreBenchmarkResult>;
 
 type BenchmarkResult = {
+  category: (typeof benchmarkCases)[number]["category"];
   concept: string;
   evaluation: Awaited<ReturnType<typeof runEvaluation>>;
   expected: (typeof benchmarkCases)[number]["expectedCharacteristics"];
@@ -22,8 +23,8 @@ export async function runBenchmarks() {
       concept: testCase.concept,
       sourceText: testCase.sourceMaterial,
       userExplanation: testCase.userExplanation,
-      confidence: 3,
-      evaluationMode: "quick",
+      confidence: testCase.confidence,
+      evaluationMode: testCase.evaluationMode,
     });
 
     const durationMs = Date.now() - startedAt;
@@ -34,6 +35,7 @@ export async function runBenchmarks() {
     );
 
     results.push({
+      category: testCase.category,
       concept: testCase.concept,
       evaluation,
       expected: testCase.expectedCharacteristics,
