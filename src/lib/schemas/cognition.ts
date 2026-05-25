@@ -5,6 +5,7 @@ export const EvaluationInputSchema = z.object({
   sourceText: z.string().min(10),
   userExplanation: z.string().min(10),
   confidence: z.number().min(1).max(5),
+  evaluationMode: z.enum(["quick", "full"]).default("quick"),
 });
 
 export const DimensionEvaluationSchema = z.object({
