@@ -299,3 +299,14 @@ ${Object.entries(criterion.scoringGuide)
     })
     .join("\n---\n");
 }
+
+export function formatCompactRubricForPrompt() {
+    return cognitionRubric
+      .map((criterion) => {
+        return `
+  ${criterion.dimension}: ${criterion.description}
+  Score 0-5 based on: ${criterion.evaluationQuestions.join(" ")}
+  `;
+      })
+      .join("\n");
+  }

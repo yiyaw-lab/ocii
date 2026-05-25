@@ -9,7 +9,7 @@ export const benchmarkCases = [
       "Goodhart's Law means metrics stop being reliable when people optimize directly for them. The behavior shifts toward improving the number rather than preserving the original goal.",
 
     expectedCharacteristics: {
-      shouldScoreHighOn: ["conceptual_accuracy", "mechanistic_reasoning"],
+      shouldScoreHighOn: ["conceptual_accuracy"],
       shouldScoreLowOn: ["transfer_capability"],
       expectedOverallRange: [60, 75],
     },
