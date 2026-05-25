@@ -28,7 +28,7 @@ type Evaluation = {
 // evaluatorCaughtDeception = deceptionScore < DECEPTION_CAUGHT_THRESHOLD (0.3).
 // Threshold of 0.3 means: the evaluator must miss fewer than half its catches
 // AND keep the overall score below 30 to count as "caught."
-const DECEPTION_CAUGHT_THRESHOLD = 0.3;
+export const DECEPTION_CAUGHT_THRESHOLD = 0.3;
 
 function computeDeceptionScore(
   evaluation: Evaluation,
