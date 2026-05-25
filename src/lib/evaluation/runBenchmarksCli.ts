@@ -1,7 +1,5 @@
 import { runBenchmarks } from "@/lib/evaluation/runBenchmarks";
-
-// Risk threshold above which a case is considered flagged by the adversarial detector.
-const DETECTION_FLAG_THRESHOLD = 0.4;
+import { RISK_FLAG_THRESHOLD } from "@/lib/evaluation/adversarialDetection";
 
 function fmt(n: number) {
   return n.toFixed(3);
@@ -47,10 +45,10 @@ async function main() {
 
   // Adversarial detector: how many adversarial cases were flagged above threshold
   const detectorFlaggedAdversarial = adversarialResults.filter(
-    (r) => r.adversarialDetection.overallAdversarialRiskScore >= DETECTION_FLAG_THRESHOLD
+    (r) => r.adversarialDetection.overallAdversarialRiskScore >= RISK_FLAG_THRESHOLD
   ).length;
   const detectorFlaggedStandard = standardResults.filter(
-    (r) => r.adversarialDetection.overallAdversarialRiskScore >= DETECTION_FLAG_THRESHOLD
+    (r) => r.adversarialDetection.overallAdversarialRiskScore >= RISK_FLAG_THRESHOLD
   ).length;
   const avgDetectorRisk =
     results.length > 0
@@ -81,7 +79,7 @@ async function main() {
 
   console.log(`\n=== Adversarial Detector Summary (second-stage heuristics) ===`);
   console.log(`Note: detector risk is SEPARATE from understanding score — it does not alter evaluation output.`);
-  console.log(`Adversarial cases flagged:  ${detectorFlaggedAdversarial}/${adversarialResults.length} (threshold ≥${DETECTION_FLAG_THRESHOLD})`);
+  console.log(`Adversarial cases flagged:  ${detectorFlaggedAdversarial}/${adversarialResults.length} (threshold ≥${RISK_FLAG_THRESHOLD})`);
   console.log(`Standard cases flagged:     ${detectorFlaggedStandard}/${standardResults.length}`);
   if (avgDetectorRisk !== null) {
     console.log(`Avg overall risk score:     ${avgDetectorRisk}`);
@@ -106,7 +104,7 @@ async function main() {
       const score = benchmarkScore.actualOverallScore;
       const range = benchmarkScore.expectedRange.join("–");
       const risk = adversarialDetection.overallAdversarialRiskScore;
-      const riskLabel = risk >= DETECTION_FLAG_THRESHOLD ? " ⚠ RISK FLAGGED" : "";
+      const riskLabel = risk >= RISK_FLAG_THRESHOLD ? " ⚠ RISK FLAGGED" : "";
       console.log(`\n[${status}] ${concept}${riskLabel}`);
       console.log(`  Overall score: ${score} (expected ${range})`);
       console.log(`  Adversarial risk: ${fmt(risk)} ${riskBar(risk)}`);
@@ -149,7 +147,7 @@ async function main() {
 
       const detRisk = adversarialDetection.overallAdversarialRiskScore;
       const detectorStatus =
-        detRisk >= DETECTION_FLAG_THRESHOLD ? "DETECTOR FLAGGED" : "detector missed";
+        detRisk >= RISK_FLAG_THRESHOLD ? "DETECTOR FLAGGED" : "detector missed";
 
       console.log(`\n[${evaluatorStatus}] ${concept}  (${adversarialType})`);
       console.log(`  Evaluator score:  ${overall} (expected range ${range})`);

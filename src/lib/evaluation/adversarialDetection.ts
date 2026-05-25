@@ -11,6 +11,37 @@
 // LLM-assisted refinement is available via detectAdversarialRiskWithLLM for the
 // causal inversion signal, which is the hardest to detect from structure alone.
 
+// ---------------------------------------------------------------------------
+// Threshold constants
+// ---------------------------------------------------------------------------
+//
+// Calibrated against live benchmark observations across six adversarial case
+// types. See __tests__/calibrationReport.md for the full per-case analysis.
+//
+// RISK_FLAG_THRESHOLD (0.40): overallAdversarialRiskScore above this value is
+//   surfaced as a warning. Chosen because:
+//     - All adversarial types produce max(subscores) ≥ 0.45 after calibration
+//     - Standard clean cases produce max ≈ 0.00–0.05 (well below)
+//     - Gap of ~0.35+ between clean and adversarial provides comfortable margin
+//   Catches: confident_hallucination (1.0), vague_intellectual (0.75),
+//   memorized_paraphrase (0.55), causally_inverted (0.55),
+//   transfer_bluffing (0.55 via text heuristic).
+//   Does NOT fire on fluent_nonsense when the evaluator already caught it
+//   (overall score too low to trigger any subcore).
+//
+// HIGH_RISK_THRESHOLD (0.70): strong confidence that a specific deception
+//   pattern is present. Above this value the pressure test is urgent.
+//   Calibrated so confident_hallucination (1.0) and vague_intellectual (0.75)
+//   qualify, while paraphrase (0.25), causal inversion (0.25–0.43), and bluff
+//   (0.55) do not — these warrant investigation, not automatic intervention.
+//
+// Both thresholds operate on overallAdversarialRiskScore = max(subscores).
+// When any single subcore exceeds HIGH_RISK_THRESHOLD, the overall risk is
+// also above HIGH_RISK_THRESHOLD by definition.
+
+export const RISK_FLAG_THRESHOLD = 0.40;
+export const HIGH_RISK_THRESHOLD = 0.70;
+
 // --- Input / output types ---
 
 export type DimensionForDetection = {
@@ -41,7 +72,7 @@ export type AdversarialDetectionResult = {
   transferBluffRiskScore: number;
   vagueJargonRiskScore: number;
   causalInversionRiskScore: number;
-  // Weighted composite of the six subscores. Does not modify overallUnderstandingScore.
+  // max(subscores). Does not modify overallUnderstandingScore.
   overallAdversarialRiskScore: number;
   // Human-readable descriptions of triggered heuristic rules.
   riskFlags: string[];
@@ -108,6 +139,37 @@ const SEQUENTIAL_PATTERNS: RegExp[] = [
   /\bonly\s+(after|once|when)\b/i,
   /\bsubsequently\b/i,
   /\bit\s+(only\s+)?(begins?|starts?|operates?)\s+(after|once|when)\b/i,
+];
+
+// Phrases indicating the explanation claims the concept applies to multiple
+// domains. Three or more such claims without mechanism bridging is a transfer
+// bluff signal detectable from the text alone (evaluation-independent).
+const APPLICATION_CLAIM_PATTERNS: RegExp[] = [
+  /\bit\s+explains\b/gi,
+  /\b(also|further|additionally)\s+explains\b/gi,
+  /\bapplies?\s+(to|across|in|throughout)\b/gi,
+  /\bin\s+[a-z]+,\s*(it|this|the concept|the bias|loss|the effect)\b/gi,
+  /\bexplains?\s+(?:the\s+)?(?:behavior|tendency|preference|phenomenon|why)\b/gi,
+];
+
+// Phrases that would legitimize multi-domain application by explicitly bridging
+// the mechanism. Absence of these alongside many application claims is the
+// bluff signal.
+const MECHANISM_BRIDGE_PHRASES = [
+  "because the same", "the same mechanism", "same underlying", "same reason",
+  "for the same reason", "the underlying mechanism", "the mechanism is",
+  "this is because", "this works because", "same process", "same principle",
+];
+
+// Domain markers for application areas commonly misappropriated in transfer
+// bluffing (citing sports, relationships, or workplaces to inflate coverage).
+const APPLICATION_DOMAIN_MARKERS: RegExp[] = [
+  /\b(invest|investor|stock|market|finance|portfolio)\b/i,
+  /\b(sport|athlete|game|competition|coach|player|tennis)\b/i,
+  /\b(procrastinat|avoidance|delay|lazy|motivation)\b/i,
+  /\b(relationship|partner|dating|social|friendship)\b/i,
+  /\b(workplace|career|employee|management|negotiat)\b/i,
+  /\b(political|voting|policy|election)\b/i,
 ];
 
 // --- Helpers ---
@@ -280,35 +342,102 @@ export function computeHallucinationRisk(
   return { score: clamp01(risk), flags };
 }
 
-// High conceptual accuracy score alongside low transfer capability.
-// Indicates the learner can describe the concept accurately in context but
-// cannot apply the underlying structure to a new domain — a classic bluff pattern.
+// Transfer bluffing: high conceptual accuracy alongside low transfer capability
+// (evaluation-based signal), OR domain proliferation without mechanism bridging
+// (text-based signal).
+//
+// The text-based signal is evaluation-independent — it catches cases where the
+// evaluator itself was fooled into giving high transfer scores. Calibration data
+// showed that the Loss Aversion (transfer_bluffing) benchmark produced
+// transfer_capability = 4.0 from the evaluator, so the dimension-gap heuristic
+// produced 0. The text heuristic catches it with ≥3 application claims and
+// zero mechanism-bridging phrases.
 export function computeTransferBluffRisk(
-  evaluation: EvaluationForDetection
+  evaluation: EvaluationForDetection,
+  input?: InputForDetection
 ): { score: number; flags: string[] } {
   const flags: string[] = [];
   const conceptual = dimScore(evaluation, "conceptual_accuracy");
   const transfer = dimScore(evaluation, "transfer_capability");
 
-  if (conceptual === undefined || transfer === undefined) {
-    return { score: 0, flags };
-  }
-
   let risk = 0;
 
-  if (conceptual >= 3.5 && transfer <= 2.0) {
-    risk = 0.9;
-    flags.push(
-      `High conceptual accuracy (${conceptual}) with very low transfer (${transfer}) — strong bluff signal`
-    );
-  } else if (conceptual >= 3.0 && transfer <= 2.5) {
-    risk = 0.55;
-    flags.push(
-      `Good conceptual accuracy (${conceptual}) but weak transfer capability (${transfer})`
-    );
+  // Dimension-based: evaluator correctly flagged the gap.
+  if (conceptual !== undefined && transfer !== undefined) {
+    if (conceptual >= 3.5 && transfer <= 2.0) {
+      risk = 0.9;
+      flags.push(
+        `High conceptual accuracy (${conceptual}) with very low transfer (${transfer}) — strong bluff signal`
+      );
+    } else if (conceptual >= 3.0 && transfer <= 2.5) {
+      risk = 0.55;
+      flags.push(
+        `Good conceptual accuracy (${conceptual}) but weak transfer capability (${transfer})`
+      );
+    }
+  }
+
+  // Text-based: evaluation-independent domain proliferation check.
+  // Triggers even when the evaluator gave high transfer scores (was fooled).
+  if (input !== undefined) {
+    const textSignal = computeTransferBluffFromText(input);
+    risk = Math.max(risk, textSignal.risk);
+    flags.push(...textSignal.flags);
   }
 
   return { score: clamp01(risk), flags };
+}
+
+// Counts explicit domain application claims vs mechanism-bridging phrases.
+// An explanation that claims the concept applies to 3+ distinct domains without
+// explaining WHY the same mechanism operates in each domain is a bluff signal.
+// This is evaluation-independent: it reads the explanation text only.
+function computeTransferBluffFromText(
+  input: InputForDetection
+): { risk: number; flags: string[] } {
+  const explanation = input.userExplanation;
+  const lowerExplanation = explanation.toLowerCase();
+
+  // Count application claim pattern matches. Reset lastIndex on global regexes.
+  let applicationClaimCount = 0;
+  for (const pattern of APPLICATION_CLAIM_PATTERNS) {
+    const matches = explanation.match(pattern) ?? [];
+    applicationClaimCount += matches.length;
+  }
+
+  // Count mechanism-bridging phrases.
+  const bridgeCount = MECHANISM_BRIDGE_PHRASES.filter((phrase) =>
+    lowerExplanation.includes(phrase.toLowerCase())
+  ).length;
+
+  // Count distinct application domains referenced.
+  const domainsMatched = APPLICATION_DOMAIN_MARKERS.filter((p) =>
+    p.test(explanation)
+  ).length;
+
+  const flags: string[] = [];
+  let risk = 0;
+
+  if (applicationClaimCount >= 3 && bridgeCount === 0) {
+    risk = 0.55;
+    flags.push(
+      `${applicationClaimCount} cross-domain application claims with no mechanism-bridging language — transfer bluff pattern`
+    );
+  } else if (applicationClaimCount >= 2 && bridgeCount === 0) {
+    risk = 0.35;
+    flags.push(
+      `Multiple cross-domain application claims with no mechanism bridging`
+    );
+  }
+
+  if (domainsMatched >= 2 && bridgeCount === 0 && risk < 0.40) {
+    risk = Math.max(risk, 0.40);
+    flags.push(
+      `Explanation references ${domainsMatched} distinct application domains without mechanism explanation`
+    );
+  }
+
+  return { risk, flags };
 }
 
 // High density of abstract academic vocabulary without causal connectors.
@@ -473,7 +602,7 @@ export function detectAdversarialRisk(
   const fluency = computeFluencyRisk(evaluation);
   const paraphrase = computeParaphraseRisk(input);
   const hallucination = computeHallucinationRisk(input, evaluation);
-  const transferBluff = computeTransferBluffRisk(evaluation);
+  const transferBluff = computeTransferBluffRisk(evaluation, input);
   const vagueJargon = computeVagueJargonRisk(input, evaluation);
   const causalInversion = computeCausalInversionRisk(input, evaluation);
 
