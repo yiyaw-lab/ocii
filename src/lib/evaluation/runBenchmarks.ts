@@ -1,6 +1,10 @@
 import { benchmarkCases, adversarialCases } from "@/lib/evaluation/benchmarkCases";
 import { runEvaluation } from "@/lib/evaluation/runEvaluation";
 import { scoreBenchmarkResult } from "@/lib/evaluation/scoreBenchmarkResult";
+import {
+  detectAdversarialRisk,
+  type AdversarialDetectionResult,
+} from "@/lib/evaluation/adversarialDetection";
 
 type BenchmarkScore = ReturnType<typeof scoreBenchmarkResult>;
 
@@ -13,6 +17,9 @@ type BenchmarkResult = {
   expected: (typeof benchmarkCases)[number]["expectedCharacteristics"];
   durationMs: number;
   benchmarkScore: BenchmarkScore;
+  // Adversarial risk detection is a separate second-stage analysis.
+  // It does NOT modify benchmarkScore or the evaluation output.
+  adversarialDetection: AdversarialDetectionResult;
 };
 
 export async function runBenchmarks() {
@@ -40,6 +47,16 @@ export async function runBenchmarks() {
       testCase.isAdversarial ?? false
     );
 
+    const adversarialDetection = detectAdversarialRisk(
+      {
+        concept: testCase.concept,
+        sourceText: testCase.sourceMaterial,
+        userExplanation: testCase.userExplanation,
+        confidence: 3,
+      },
+      evaluation
+    );
+
     results.push({
       concept: testCase.concept,
       evaluationMode: mode,
@@ -49,6 +66,7 @@ export async function runBenchmarks() {
       expected: testCase.expectedCharacteristics,
       durationMs,
       benchmarkScore,
+      adversarialDetection,
     });
   }
 
