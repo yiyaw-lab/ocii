@@ -53,9 +53,9 @@ User Input
 
 ---
 
-## Rubric
+## Cognitive Dimensions
 
-OCII evaluates understanding across six dimensions:
+OCII evaluates understanding across seven dimensions:
 
 - **Conceptual Accuracy** — whether the core idea is correctly represented
 - **Mechanistic Reasoning** — whether the learner explains how or why, not just what
@@ -89,21 +89,8 @@ The benchmark runner is available at `/api/benchmarks` and returns a top-level `
 - Evaluator latency remains high (~10–30s depending on mode)
 - Benchmark coverage is limited to a small case set
 - Evaluator variance across runs is still under investigation
-- Scoring calibration is experimental and subject to change
+- Scoring calibration is experimental
 - Quick and full mode benchmark expectations are not yet separately defined
-
----
-
-## Research Directions
-
-Future research directions include:
-
-- Evaluator consistency modeling and variance analysis
-- Longitudinal cognition tracking across sessions
-- Transfer graph systems linking concepts by structural similarity
-- Ensemble evaluators for stability
-- Retrieval robustness measurement over time
-- Cognitive dependency detection
 
 ---
 
@@ -121,6 +108,19 @@ OPENAI_API_KEY=
 NEXT_PUBLIC_SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 ```
+
+---
+
+## Research Directions
+
+Future research directions include:
+
+- Evaluator consistency modeling and variance analysis
+- Longitudinal cognition tracking across sessions
+- Transfer graph systems linking concepts by structural similarity
+- Ensemble evaluators for stability
+- Retrieval robustness measurement over time
+- Cognitive dependency detection
 
 ---
 
