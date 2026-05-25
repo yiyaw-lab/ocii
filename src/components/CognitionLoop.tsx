@@ -29,6 +29,7 @@ export function CognitionLoop() {
   const [sourceText, setSourceText] = useState("");
   const [userExplanation, setUserExplanation] = useState("");
   const [confidence, setConfidence] = useState(3);
+  const [evaluationMode, setEvaluationMode] = useState<"quick" | "full">("quick");
   const [result, setResult] = useState<EvaluationData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,7 +44,7 @@ export function CognitionLoop() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
     
-        body: JSON.stringify({ concept, sourceText, userExplanation, confidence }),
+        body: JSON.stringify({ concept, sourceText, userExplanation, confidence, evaluationMode }),
       });
 
       const data = await res.json();
@@ -81,6 +82,29 @@ export function CognitionLoop() {
             </div>
             <input type="range" min="1" max="5" value={confidence} onChange={(e) => setConfidence(Number(e.target.value))} className="w-full" />
           </label>
+
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-neutral-400">Mode</span>
+            <div className="flex rounded-xl border border-neutral-700 bg-neutral-950 p-1 text-sm">
+              {(["quick", "full"] as const).map((m) => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => setEvaluationMode(m)}
+                  className={`rounded-lg px-3 py-1 transition ${
+                    evaluationMode === m
+                      ? "bg-white text-neutral-950 font-medium"
+                      : "text-neutral-400 hover:text-neutral-200"
+                  }`}
+                >
+                  {m === "quick" ? "Quick" : "Full Audit"}
+                </button>
+              ))}
+            </div>
+            <span className="text-xs text-neutral-600">
+              {evaluationMode === "quick" ? "3 dimensions · fast" : "7 dimensions · deep"}
+            </span>
+          </div>
 
           <button
             onClick={evaluate}
