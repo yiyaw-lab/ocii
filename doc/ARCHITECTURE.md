@@ -334,9 +334,82 @@ Responsibilities
 
 Checks:
 
-* expected score range
-* expected high dimensions
-* expected low dimensions
+* expected overall score range
+* expected high dimensions (score ≥ 3.5)
+* expected low dimensions (score ≤ 2.5)
+* abstraction pressure range, when a pressure fixture is present
+
+⸻
+
+Abstraction Pressure Tests
+
+Problem: source-visible evaluation cannot distinguish paraphrase from understanding
+
+When the source material is available during evaluation:
+* a copied definition scores identically to a reconstruction on conceptual_accuracy
+* the definition text encodes the mechanism, so mechanistic_reasoning is inherited by paraphrase
+* retrieval_robustness cannot separate recall from reading
+
+In benchmark runs, near-verbatim paraphrase cases score 87–97 in quick mode.
+Strong understanding cases score 91–100. The distributions overlap almost completely.
+This is not an evaluator bug — it is a structural property of evaluation-with-source.
+
+Design: two-stage evaluation
+
+Stage 1: standard rubric evaluation (source material present)
+Stage 2: abstraction pressure challenge (source material absent)
+
+The full-mode evaluator generates one abstraction pressure challenge after scoring.
+The challenge must be impossible to answer by restating the definition.
+It requires one of:
+
+* analogy — structural mapping to a completely different domain
+* transfer — novel application with explicit role assignments
+* compression — essential logical structure in different words
+* reframing — explanation pitched to a skeptic or non-expert
+
+The pressure scorer (src/lib/ai/scoreAbstractionPressure.ts) receives:
+concept, challenge, pressureType, response — and nothing else.
+Source text is deliberately excluded. This forces the scorer to evaluate
+whether the response demonstrates structural knowledge that cannot be
+reproduced by copying.
+
+pressureScore
+
+0–100 (raw 0–5 score scaled to 100)
+
+high (≥60): genuine abstraction or transfer — novel structural mapping
+mid (40–60): partial attempt; some evidence of structural understanding
+low (≤40): challenge evasion, paraphrase, or borrowed sophistication
+
+Detectable evasion patterns:
+* definition restated instead of analogy provided
+* buzzword-dense prose without actual compression
+* vague philosophical language that ignores the specific challenge type
+
+Benchmark interpretation
+
+abstraction_pressure benchmark cases use scripted challenge+response pairs
+where the response is intentionally poor. The expectedPressureScoreRange is low.
+
+A benchmark PASS means the detector worked correctly — it caught the evasion.
+It does not mean the response was good.
+
+Benchmark category labels are designed to read as:
+"pressure caught paraphrase" (PASS = detector succeeded)
+not:
+"response was high quality" (which PASS implies in other categories)
+
+Two-stage interaction model
+
+In the current pipeline:
+1. runEvaluation → returns evaluation + abstractionPressureTest.challenge
+2. User responds to the challenge (separate interaction, not yet in UI)
+3. scoreAbstractionPressure → returns pressureScore
+
+For benchmark cases, step 2 is replaced by a scripted response in the
+abstractionPressure.response field. This allows the pressure scorer to
+be tested without a real user interaction.
 
 ⸻
 
