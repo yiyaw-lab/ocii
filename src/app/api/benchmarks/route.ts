@@ -4,7 +4,9 @@ import { runBenchmarks } from "@/lib/evaluation/runBenchmarks";
 export async function GET() {
   try {
     const results = await runBenchmarks();
-    return NextResponse.json({ results });
+    const allPassed = results.every((r) => r.benchmarkScore.passed);
+
+    return NextResponse.json({ allPassed, results });
   } catch (error) {
     console.error("BENCHMARK_ERROR:", error);
 
