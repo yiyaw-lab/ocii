@@ -8,6 +8,27 @@ export const EvaluationInputSchema = z.object({
   evaluationMode: z.enum(["quick", "full"]).default("quick"),
 });
 
+export const AbstractionPressureTestSchema = z.object({
+  challenge: z.string(),
+  pressureType: z.enum(["analogy", "transfer", "compression", "reframing"]),
+  requiredElements: z.array(z.string()).default([]),
+});
+
+export const AbstractionPressureScoreSchema = z.object({
+  score: z.number().min(0).max(5),
+  pressureScore: z.number().min(0).max(100),
+  evidenceOfParaphrase: z.boolean(),
+  evidenceOfTransfer: z.boolean(),
+  rationale: z.string(),
+});
+
+export const AbstractionPressureInputSchema = z.object({
+  concept: z.string(),
+  challenge: z.string(),
+  pressureType: AbstractionPressureTestSchema.shape.pressureType,
+  response: z.string().min(5),
+});
+
 export const DimensionEvaluationSchema = z.object({
   dimension: z.string(),
   score: z.number().min(0).max(5),
@@ -31,4 +52,6 @@ export const EvaluationOutputSchema = z.object({
     overallFeedback: z.string(),
     nextLearningStep: z.string(),
   }),
+
+  abstractionPressureTest: AbstractionPressureTestSchema.optional(),
 });

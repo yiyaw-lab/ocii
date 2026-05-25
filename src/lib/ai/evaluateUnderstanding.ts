@@ -32,7 +32,7 @@ export async function evaluateUnderstanding(input: EvaluationInput) {
     model: "gpt-4.1-mini",
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
-    max_tokens: isQuick ? 700 : 1600,
+    max_tokens: isQuick ? 700 : 1900,
   });
 
   const raw = JSON.parse(response.choices[0].message.content || "{}");
@@ -116,6 +116,11 @@ ${input.userExplanation}
 USER CONFIDENCE:
 ${input.confidence}/5
 
+After evaluation, generate one abstraction pressure test that would expose whether the learner genuinely understands the concept or merely paraphrased it. The challenge must require one of: analogy (from a different domain), transfer (novel application), compression (essential structure in one sentence), or reframing (explain to a skeptic or child).
+The challenge must be impossible to answer by restating the definition.
+Set pressureType to the challenge type used.
+Include 1–2 requiredElements the response must contain to pass.
+
 Return ONLY valid JSON.
 
 Required structure:
@@ -142,6 +147,12 @@ Required structure:
     "calibrationAssessment": string,
     "overallFeedback": string,
     "nextLearningStep": string
+  },
+
+  "abstractionPressureTest": {
+    "challenge": string,
+    "pressureType": "analogy" | "transfer" | "compression" | "reframing",
+    "requiredElements": string[]
   }
 }`;
 }

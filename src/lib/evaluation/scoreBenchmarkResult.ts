@@ -12,9 +12,20 @@ type Evaluation = {
   }[];
 };
 
+type PressureScore = {
+  pressureScore: number;
+  evidenceOfParaphrase: boolean;
+};
+
+type PressureExpectation = {
+  expectedPressureScoreRange: [number, number];
+};
+
 export function scoreBenchmarkResult(
   evaluation: Evaluation,
-  expected: ExpectedCharacteristics
+  expected: ExpectedCharacteristics,
+  pressureScore?: PressureScore,
+  pressureExpectation?: PressureExpectation
 ) {
   const [min, max] = expected.expectedOverallRange;
 
@@ -43,10 +54,30 @@ export function scoreBenchmarkResult(
       passed: (dimensionMap.get(dimension) ?? 5) <= 2.5,
     }));
 
+  let pressureCheck: {
+    actualPressureScore: number;
+    expectedPressureRange: [number, number];
+    pressureInRange: boolean;
+    evidenceOfParaphrase: boolean;
+  } | null = null;
+
+  if (pressureScore && pressureExpectation) {
+    const [pMin, pMax] = pressureExpectation.expectedPressureScoreRange;
+    pressureCheck = {
+      actualPressureScore: pressureScore.pressureScore,
+      expectedPressureRange: pressureExpectation.expectedPressureScoreRange,
+      pressureInRange:
+        pressureScore.pressureScore >= pMin &&
+        pressureScore.pressureScore <= pMax,
+      evidenceOfParaphrase: pressureScore.evidenceOfParaphrase,
+    };
+  }
+
   const passed =
     overallInRange &&
     highDimensionChecks.every((check) => check.passed) &&
-    lowDimensionChecks.every((check) => check.passed);
+    lowDimensionChecks.every((check) => check.passed) &&
+    (pressureCheck === null || pressureCheck.pressureInRange);
 
   return {
     passed,
@@ -55,5 +86,6 @@ export function scoreBenchmarkResult(
     actualOverallScore: evaluation.overallUnderstandingScore,
     highDimensionChecks,
     lowDimensionChecks,
+    pressureCheck,
   };
 }

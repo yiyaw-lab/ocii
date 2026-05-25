@@ -1,4 +1,6 @@
 import type { RubricDimension } from "@/lib/evaluation/rubric";
+import type { z } from "zod";
+import type { AbstractionPressureTestSchema } from "@/lib/schemas/cognition";
 
 export type EvaluationMode = "quick" | "full";
 
@@ -6,7 +8,15 @@ export type BenchmarkCategory =
   | "strong_understanding"
   | "surface_paraphrase"
   | "confident_but_wrong"
-  | "good_recall_weak_transfer";
+  | "good_recall_weak_transfer"
+  | "abstraction_pressure";
+
+export type AbstractionPressureFixture = {
+  challenge: string;
+  pressureType: z.infer<typeof AbstractionPressureTestSchema>["pressureType"];
+  response: string;
+  expectedPressureScoreRange: [number, number];
+};
 
 export type BenchmarkCase = {
   category: BenchmarkCategory;
@@ -21,6 +31,7 @@ export type BenchmarkCase = {
     shouldScoreLowOn: RubricDimension[];
     expectedOverallRange: [number, number];
   };
+  abstractionPressure?: AbstractionPressureFixture;
 };
 
 export const benchmarkCases: BenchmarkCase[] = [
@@ -249,6 +260,89 @@ export const benchmarkCases: BenchmarkCase[] = [
       shouldScoreHighOn: ["retrieval_robustness", "conceptual_accuracy"],
       shouldScoreLowOn: [],
       expectedOverallRange: [45, 85],
+    },
+  },
+
+  // ── Category 5: Abstraction Pressure Tests ────────────────────────────────
+  // These cases test the pressure scorer directly, not the main evaluator.
+  // The main evaluation fields are present but secondary; the key assertion
+  // is that the scripted pressure RESPONSE scores LOW (pressureScore ≤ 30).
+
+  {
+    category: "abstraction_pressure",
+    reason:
+      "Tests that the pressure scorer detects fluent paraphrase: when asked for an analogy from a different domain, the learner simply restates the definition. The challenge is unsatisfiable by copying.",
+    concept: "Cognitive Dissonance",
+    sourceMaterial:
+      "Cognitive dissonance is the psychological discomfort experienced when a person holds two or more contradictory beliefs, values, or attitudes simultaneously. People are motivated to reduce this discomfort by changing a belief, adding new information, or reducing the importance of the conflict.",
+    userExplanation:
+      "Cognitive dissonance is when a person holds two or more contradictory beliefs, values, or attitudes at the same time, which causes psychological discomfort. People try to reduce this discomfort by changing one of the beliefs, finding new information, or deciding the conflict isn't that important.",
+    confidence: 4,
+    evaluationMode: "quick",
+    expectedCharacteristics: {
+      shouldScoreHighOn: [],
+      shouldScoreLowOn: [],
+      expectedOverallRange: [50, 100],
+    },
+    abstractionPressure: {
+      challenge:
+        "Give an analogy for cognitive dissonance from a domain completely unrelated to psychology. Do not use the words 'belief', 'attitude', or 'discomfort'.",
+      pressureType: "analogy",
+      response:
+        "Cognitive dissonance is when a person holds two or more contradictory beliefs, values, or attitudes at the same time, which creates psychological discomfort. People are motivated to reduce this discomfort by changing one of the beliefs, adding new information, or reducing the importance of the conflict.",
+      expectedPressureScoreRange: [0, 50],
+    },
+  },
+
+  {
+    category: "abstraction_pressure",
+    reason:
+      "Tests that the pressure scorer detects memorized abstraction phrases: when asked to compress to essential structure, the learner produces buzzword-dense prose that sounds sophisticated but applies no actual compression.",
+    concept: "Opportunity Cost",
+    sourceMaterial:
+      "Opportunity cost is the value of the best alternative forgone when making a choice. Because resources are scarce, every decision to use them in one way is simultaneously a decision not to use them in another way.",
+    userExplanation:
+      "Opportunity cost is the invisible price tag on every decision: what you gave up by choosing this instead of the best other option. The insight is that costs aren't just money spent — they include future alternatives that can no longer exist.",
+    confidence: 4,
+    evaluationMode: "quick",
+    expectedCharacteristics: {
+      shouldScoreHighOn: [],
+      shouldScoreLowOn: [],
+      expectedOverallRange: [50, 100],
+    },
+    abstractionPressure: {
+      challenge:
+        "Compress opportunity cost to its essential logical structure in one sentence that has nothing to do with money or economics.",
+      pressureType: "compression",
+      response:
+        "Opportunity cost fundamentally reflects the cognitive framing we apply to resource allocation within a decision-theoretic mental model — it reveals the underlying tension between present value maximization and future optionality preservation across all possible choice spaces.",
+      expectedPressureScoreRange: [0, 50],
+    },
+  },
+
+  {
+    category: "abstraction_pressure",
+    reason:
+      "Tests that the pressure scorer detects vague intellectual wording: when asked to transfer the concept to a new domain (programming language evolution), the learner produces philosophical-sounding language that never actually applies the concept.",
+    concept: "Natural Selection",
+    sourceMaterial:
+      "Natural selection is the process by which heritable traits that improve survival and reproductive success become more common in a population over successive generations. It requires: variation in traits, heritability, and differential reproductive success linked to traits.",
+    userExplanation:
+      "Natural selection is an algorithm that runs without a designer. Given variation, heritability, and differential reproduction, populations drift toward configurations that produce more surviving offspring. It just filters — it isn't trying to improve anything.",
+    confidence: 4,
+    evaluationMode: "quick",
+    expectedCharacteristics: {
+      shouldScoreHighOn: [],
+      shouldScoreLowOn: [],
+      expectedOverallRange: [50, 100],
+    },
+    abstractionPressure: {
+      challenge:
+        "Explain how natural selection applies to the evolution of programming languages. Be specific about which element plays the role of variation, heritability, and differential reproduction.",
+      pressureType: "transfer",
+      response:
+        "Natural selection is a profound principle that reveals how complex systems self-organize over time. It reflects the fundamental tension between adaptation and entropy in any evolving system. This concept operates at many levels of reality and applies wherever there is change and complexity in the world.",
+      expectedPressureScoreRange: [0, 50],
     },
   },
 ];
