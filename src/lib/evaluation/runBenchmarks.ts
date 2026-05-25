@@ -6,6 +6,7 @@ type BenchmarkScore = ReturnType<typeof scoreBenchmarkResult>;
 
 type BenchmarkResult = {
   concept: string;
+  evaluationMode: string;
   evaluation: Awaited<ReturnType<typeof runEvaluation>>;
   expected: (typeof benchmarkCases)[number]["expectedCharacteristics"];
   durationMs: number;
@@ -17,13 +18,14 @@ export async function runBenchmarks() {
 
   for (const testCase of benchmarkCases) {
     const startedAt = Date.now();
+    const mode = testCase.evaluationMode ?? "quick";
 
     const evaluation = await runEvaluation({
       concept: testCase.concept,
       sourceText: testCase.sourceMaterial,
       userExplanation: testCase.userExplanation,
       confidence: 3,
-      evaluationMode: "quick",
+      evaluationMode: mode,
     });
 
     const durationMs = Date.now() - startedAt;
@@ -35,6 +37,7 @@ export async function runBenchmarks() {
 
     results.push({
       concept: testCase.concept,
+      evaluationMode: mode,
       evaluation,
       expected: testCase.expectedCharacteristics,
       durationMs,
