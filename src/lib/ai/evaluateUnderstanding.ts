@@ -18,8 +18,15 @@ const client = new OpenAI({
 
 type EvaluationInput = z.infer<typeof EvaluationInputSchema>;
 
-export async function evaluateUnderstanding(input: EvaluationInput) {
-  const isQuick = input.evaluationMode === "quick";
+type EvaluateOptions = {
+  temperature?: number;
+};
+
+export async function evaluateUnderstanding(
+  input: EvaluationInput,
+  options: EvaluateOptions = {}
+) {
+  const isQuick = input.evaluationMode !== "full";
   const rubric = isQuick
     ? formatQuickRubricForPrompt()
     : formatCompactRubricForPrompt();
@@ -33,6 +40,7 @@ export async function evaluateUnderstanding(input: EvaluationInput) {
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
     max_tokens: isQuick ? 700 : 1600,
+    ...(options.temperature !== undefined && { temperature: options.temperature }),
   });
 
   const raw = JSON.parse(response.choices[0].message.content || "{}");
