@@ -7,12 +7,27 @@ export const EvaluationInputSchema = z.object({
   confidence: z.number().min(1).max(5),
 });
 
+export const DimensionEvaluationSchema = z.object({
+  dimension: z.string(),
+  score: z.number().min(0).max(5),
+  evaluatorConfidence: z.enum(["low", "medium", "high"]),
+  evidence: z.array(z.string()).default([]),
+  misconceptions: z.array(z.string()).default([]),
+  missingNuance: z.array(z.string()).default([]),
+  rationale: z.string(),
+  nextTestPrompt: z.string(),
+});
+
 export const EvaluationOutputSchema = z.object({
-  understandingScore: z.number().min(0).max(100),
-  retrievalQuality: z.number().min(0).max(100),
-  reasoningClarity: z.number().min(0).max(100),
-  transferReadiness: z.number().min(0).max(100),
-  calibrationGap: z.string(),
-  feedback: z.string(),
-  nextPrompt: z.string(),
+  relatedConcepts: z.array(z.string()).default([]),
+
+  dimensionEvaluations: z.array(DimensionEvaluationSchema).min(1),
+
+  summary: z.object({
+    strongestDimension: z.string(),
+    weakestDimension: z.string(),
+    calibrationAssessment: z.string(),
+    overallFeedback: z.string(),
+    nextLearningStep: z.string(),
+  }),
 });

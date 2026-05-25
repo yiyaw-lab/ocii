@@ -5,34 +5,59 @@ type SaveEvaluationInput = {
   sourceText: string;
   userExplanation: string;
   confidence: number;
+
   result: {
-    understandingScore: number;
-    retrievalQuality: number;
-    reasoningClarity: number;
-    transferReadiness: number;
-    calibrationGap: string;
-    feedback: string;
-    nextPrompt: string;
+    overallUnderstandingScore: number;
+
+    relatedConcepts: string[];
+
+    dimensionEvaluations: {
+      dimension: string;
+      score: number;
+      evaluatorConfidence: string;
+      evidence: string[];
+      misconceptions: string[];
+      missingNuance: string[];
+      rationale: string;
+      nextTestPrompt: string;
+    }[];
+
+    summary: {
+      strongestDimension: string;
+      weakestDimension: string;
+      calibrationAssessment: string;
+      overallFeedback: string;
+      nextLearningStep: string;
+    };
   };
 };
 
-export async function saveEvaluation(input: SaveEvaluationInput) {
+export async function saveEvaluation(
+  input: SaveEvaluationInput
+) {
   const { data, error } = await supabaseAdmin
     .from("evaluations")
     .insert({
       concept: input.concept,
+
       source_text: input.sourceText,
-      user_explanation: input.userExplanation,
+
+      user_explanation:
+        input.userExplanation,
+
       confidence: input.confidence,
 
-      understanding_score: input.result.understandingScore,
-      retrieval_quality: input.result.retrievalQuality,
-      reasoning_clarity: input.result.reasoningClarity,
-      transfer_readiness: input.result.transferReadiness,
+      overall_understanding_score:
+        input.result.overallUnderstandingScore,
 
-      calibration_gap: input.result.calibrationGap,
-      feedback: input.result.feedback,
-      next_prompt: input.result.nextPrompt,
+      dimension_evaluations:
+        input.result.dimensionEvaluations,
+
+      summary:
+        input.result.summary,
+
+      related_concepts:
+        input.result.relatedConcepts,
     })
     .select()
     .single();
@@ -48,7 +73,9 @@ export async function getEvaluations() {
   const { data, error } = await supabaseAdmin
     .from("evaluations")
     .select("*")
-    .order("created_at", { ascending: false });
+    .order("created_at", {
+      ascending: false,
+    });
 
   if (error) {
     throw new Error(error.message);

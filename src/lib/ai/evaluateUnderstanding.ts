@@ -1,5 +1,10 @@
 import OpenAI from "openai";
-import { EvaluationInputSchema } from "@/lib/schemas/cognition";
+import {
+  EvaluationInputSchema,
+  EvaluationOutputSchema,
+} from "@/lib/schemas/cognition";
+import { formatRubricForPrompt } from "@/lib/evaluation/rubric";
+import { calculateOverallScore } from "@/lib/evaluation/calculateOverallScore";
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -7,32 +12,58 @@ const client = new OpenAI({
 
 export async function evaluateUnderstanding(input: unknown) {
   const parsed = EvaluationInputSchema.parse(input);
+  const rubric = formatRubricForPrompt();
 
   const prompt = `
-You are evaluating genuine human understanding.
+You are a rigorous cognitive evaluator.
 
-Concept:
+Your task is NOT to reward polished writing.
+Your task is to detect evidence of genuine understanding.
+Dimension scores must be decimals from 0.0 to 5.0. Use one decimal place when useful.
+
+Evaluate the learner using the following cognitive rubric:
+
+${rubric}
+
+CONCEPT:
 ${parsed.concept}
 
-Source material:
+SOURCE MATERIAL:
 ${parsed.sourceText}
 
-User explanation:
+USER EXPLANATION:
 ${parsed.userExplanation}
 
-User confidence: ${parsed.confidence}/5
+USER CONFIDENCE:
+${parsed.confidence}/5
 
-Evaluate whether the user truly understands the concept, not whether the explanation sounds polished.
+Return ONLY valid JSON.
 
-Return JSON only with:
+Required structure:
+
 {
-  "understandingScore": number 0-100,
-  "retrievalQuality": number 0-100,
-  "reasoningClarity": number 0-100,
-  "transferReadiness": number 0-100,
-  "calibrationGap": string,
-  "feedback": string,
-  "nextPrompt": string
+  "relatedConcepts": string[],
+
+  "dimensionEvaluations": [
+    {
+      "dimension": string,
+      "score": number,
+      "evaluatorConfidence": "low" | "medium" | "high",
+      "evidence": string[],
+      "misconceptions": string[],
+      "missingNuance": string[],
+      "rationale": string,
+      "nextTestPrompt": string
+    }
+  ],
+
+  "summary": {
+    "strongestDimension": string,
+    "weakestDimension": string,
+    "calibrationAssessment": string,
+    "overallFeedback": string,
+    "nextLearningStep": string
+  }
 }
 `;
 
@@ -40,7 +71,19 @@ Return JSON only with:
     model: "gpt-4.1-mini",
     messages: [{ role: "user", content: prompt }],
     response_format: { type: "json_object" },
+    max_tokens: 2500,
   });
 
-  return JSON.parse(response.choices[0].message.content || "{}");
+  const raw = JSON.parse(response.choices[0].message.content || "{}");
+
+  const validated = EvaluationOutputSchema.parse(raw);
+  
+  const overallUnderstandingScore = calculateOverallScore(
+    validated.dimensionEvaluations.map((dimension) => dimension.score)
+  );
+  
+  return {
+    ...validated,
+    overallUnderstandingScore,
+  };
 }
