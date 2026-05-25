@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run",
+    "benchmark": "tsx src/lib/evaluation/runBenchmarksCli.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.1",
@@ -25,6 +27,8 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "tsx": "^4.22.3",
+    "typescript": "^5",
+    "vitest": "^4.1.7"
   }
 }
