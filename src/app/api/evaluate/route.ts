@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { evaluateUnderstanding } from "@/lib/ai/evaluateUnderstanding";
+import { runEvaluation } from "@/lib/evaluation/runEvaluation";
 import { saveEvaluation } from "@/lib/db/evaluations";
 import { EvaluationInputSchema } from "@/lib/schemas/cognition";
 
@@ -8,7 +8,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = EvaluationInputSchema.parse(body);
 
-    const result = await evaluateUnderstanding(parsed);
+    const result = await runEvaluation(parsed);
 
     const saved = await saveEvaluation({
       concept: parsed.concept,
