@@ -1,0 +1,284 @@
+{
+  "runId": "2026-05-25T00:00:00.000Z",
+  "timestamp": "2026-05-25T00:00:00.000Z",
+  "suiteVersion": "baseline-v1",
+  "evaluatorModel": "gpt-4.1-mini",
+  "summary": {
+    "totalCases": 15,
+    "passed": 15,
+    "failed": 0,
+    "passRate": 1.0,
+    "avgLatencyMs": 19414,
+    "avgOverallScore": 79.9,
+    "avgPressureScore": 20.0,
+    "avgDeceptionScore": 70.7,
+    "avgEvaluatorConfidence": 2.8
+  },
+  "cases": [
+    {
+      "concept": "Dunning-Kruger Effect",
+      "category": "strong_understanding",
+      "evaluationMode": "quick",
+      "overallScore": 100,
+      "durationMs": 7289,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 5,
+        "mechanistic_reasoning": 5,
+        "retrieval_robustness": 5
+      },
+      "avgEvaluatorConfidence": 3.0,
+      "pressureScore": null,
+      "evidenceOfParaphrase": null,
+      "deceptionScore": null
+    },
+    {
+      "concept": "Natural Selection",
+      "category": "strong_understanding",
+      "evaluationMode": "full",
+      "overallScore": 88,
+      "durationMs": 13534,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 4.7,
+        "mechanistic_reasoning": 4.5,
+        "abstraction_compression": 4.2,
+        "transfer_capability": 3.8,
+        "retrieval_robustness": 4.6
+      },
+      "avgEvaluatorConfidence": 2.8,
+      "pressureScore": null,
+      "evidenceOfParaphrase": null,
+      "deceptionScore": null
+    },
+    {
+      "concept": "Opportunity Cost",
+      "category": "strong_understanding",
+      "evaluationMode": "quick",
+      "overallScore": 94,
+      "durationMs": 19184,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 5,
+        "mechanistic_reasoning": 4.5,
+        "retrieval_robustness": 4.5
+      },
+      "avgEvaluatorConfidence": 3.0,
+      "pressureScore": null,
+      "evidenceOfParaphrase": null,
+      "deceptionScore": null
+    },
+    {
+      "concept": "Cognitive Dissonance",
+      "category": "surface_paraphrase",
+      "evaluationMode": "quick",
+      "overallScore": 97,
+      "durationMs": 27253,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 5,
+        "mechanistic_reasoning": 4.5,
+        "retrieval_robustness": 5
+      },
+      "avgEvaluatorConfidence": 3.0,
+      "pressureScore": null,
+      "evidenceOfParaphrase": null,
+      "deceptionScore": null
+    },
+    {
+      "concept": "Confirmation Bias",
+      "category": "surface_paraphrase",
+      "evaluationMode": "quick",
+      "overallScore": 94,
+      "durationMs": 3329,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 5,
+        "mechanistic_reasoning": 4,
+        "retrieval_robustness": 5
+      },
+      "avgEvaluatorConfidence": 2.67,
+      "pressureScore": null,
+      "evidenceOfParaphrase": null,
+      "deceptionScore": null
+    },
+    {
+      "concept": "The Peter Principle",
+      "category": "surface_paraphrase",
+      "evaluationMode": "full",
+      "overallScore": 69,
+      "durationMs": 15214,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 4.5,
+        "mechanistic_reasoning": 3.5,
+        "abstraction_compression": 3,
+        "transfer_capability": 1.5,
+        "retrieval_robustness": 4
+      },
+      "avgEvaluatorConfidence": 2.8,
+      "pressureScore": null,
+      "evidenceOfParaphrase": null,
+      "deceptionScore": null
+    },
+    {
+      "concept": "Sunk Cost Fallacy",
+      "category": "confident_but_wrong",
+      "evaluationMode": "quick",
+      "overallScore": 56,
+      "durationMs": 55103,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 3,
+        "mechanistic_reasoning": 2,
+        "retrieval_robustness": 3.5
+      },
+      "avgEvaluatorConfidence": 3.0,
+      "pressureScore": null,
+      "evidenceOfParaphrase": null,
+      "deceptionScore": null
+    },
+    {
+      "concept": "Regression to the Mean",
+      "category": "confident_but_wrong",
+      "evaluationMode": "quick",
+      "overallScore": 69,
+      "durationMs": 59343,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 3.8,
+        "mechanistic_reasoning": 2.5,
+        "retrieval_robustness": 4
+      },
+      "avgEvaluatorConfidence": 3.0,
+      "pressureScore": null,
+      "evidenceOfParaphrase": null,
+      "deceptionScore": null
+    },
+    {
+      "concept": "Cognitive Load Theory",
+      "category": "confident_but_wrong",
+      "evaluationMode": "quick",
+      "overallScore": 54,
+      "durationMs": 5070,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 3.5,
+        "mechanistic_reasoning": 2,
+        "retrieval_robustness": 2.5
+      },
+      "avgEvaluatorConfidence": 3.0,
+      "pressureScore": null,
+      "evidenceOfParaphrase": null,
+      "deceptionScore": null
+    },
+    {
+      "concept": "Overfitting",
+      "category": "good_recall_weak_transfer",
+      "evaluationMode": "full",
+      "overallScore": 69,
+      "durationMs": 14816,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 4.5,
+        "mechanistic_reasoning": 3.5,
+        "abstraction_compression": 3,
+        "transfer_capability": 1.5,
+        "retrieval_robustness": 4
+      },
+      "avgEvaluatorConfidence": 2.6,
+      "pressureScore": null,
+      "evidenceOfParaphrase": null,
+      "deceptionScore": null
+    },
+    {
+      "concept": "Law of Diminishing Returns",
+      "category": "good_recall_weak_transfer",
+      "evaluationMode": "full",
+      "overallScore": 72,
+      "durationMs": 19030,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 4.5,
+        "mechanistic_reasoning": 3.5,
+        "abstraction_compression": 3,
+        "transfer_capability": 2.5,
+        "retrieval_robustness": 4
+      },
+      "avgEvaluatorConfidence": 2.4,
+      "pressureScore": null,
+      "evidenceOfParaphrase": null,
+      "deceptionScore": null
+    },
+    {
+      "concept": "Anchoring Bias",
+      "category": "good_recall_weak_transfer",
+      "evaluationMode": "full",
+      "overallScore": 64,
+      "durationMs": 14038,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 4,
+        "mechanistic_reasoning": 2.5,
+        "abstraction_compression": 3,
+        "transfer_capability": 2,
+        "retrieval_robustness": 4
+      },
+      "avgEvaluatorConfidence": 2.4,
+      "pressureScore": null,
+      "evidenceOfParaphrase": null,
+      "deceptionScore": null
+    },
+    {
+      "concept": "Cognitive Dissonance",
+      "category": "abstraction_pressure",
+      "evaluationMode": "quick",
+      "overallScore": 94,
+      "durationMs": 5910,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 5,
+        "mechanistic_reasoning": 4,
+        "retrieval_robustness": 5
+      },
+      "avgEvaluatorConfidence": 3.0,
+      "pressureScore": 0,
+      "evidenceOfParaphrase": true,
+      "deceptionScore": 94
+    },
+    {
+      "concept": "Opportunity Cost",
+      "category": "abstraction_pressure",
+      "evaluationMode": "quick",
+      "overallScore": 87,
+      "durationMs": 25236,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 4.7,
+        "mechanistic_reasoning": 3.8,
+        "retrieval_robustness": 4.5
+      },
+      "avgEvaluatorConfidence": 2.67,
+      "pressureScore": 40,
+      "evidenceOfParaphrase": true,
+      "deceptionScore": 47
+    },
+    {
+      "concept": "Natural Selection",
+      "category": "abstraction_pressure",
+      "evaluationMode": "quick",
+      "overallScore": 91,
+      "durationMs": 6856,
+      "passed": true,
+      "dimensionScores": {
+        "conceptual_accuracy": 5,
+        "mechanistic_reasoning": 4.5,
+        "retrieval_robustness": 4
+      },
+      "avgEvaluatorConfidence": 2.67,
+      "pressureScore": 20,
+      "evidenceOfParaphrase": true,
+      "deceptionScore": 71
+    }
+  ]
+}
