@@ -1,7 +1,7 @@
+import { EvaluationInputSchema } from "@/lib/schemas/cognition";
 import { evaluateUnderstanding } from "@/lib/ai/evaluateUnderstanding";
 
 export async function runEvaluation(input: unknown) {
-  const result = await evaluateUnderstanding(input);
-
-  return result;
+  const parsed = EvaluationInputSchema.parse(input);
+  return evaluateUnderstanding(parsed);
 }
