@@ -2,13 +2,15 @@ import { benchmarkCases } from "@/lib/evaluation/benchmarkCases";
 import { runEvaluation } from "@/lib/evaluation/runEvaluation";
 import { scoreBenchmarkResult } from "@/lib/evaluation/scoreBenchmarkResult";
 
+type BenchmarkScore = ReturnType<typeof scoreBenchmarkResult>;
+
 type BenchmarkResult = {
-    concept: string;
-    evaluation: unknown;
-    expected: unknown;
-    durationMs: number;
-    benchmarkScore: unknown;
-  };
+  concept: string;
+  evaluation: Awaited<ReturnType<typeof runEvaluation>>;
+  expected: (typeof benchmarkCases)[number]["expectedCharacteristics"];
+  durationMs: number;
+  benchmarkScore: BenchmarkScore;
+};
 
 export async function runBenchmarks() {
   const results: BenchmarkResult[] = [];
@@ -21,24 +23,23 @@ export async function runBenchmarks() {
       sourceText: testCase.sourceMaterial,
       userExplanation: testCase.userExplanation,
       confidence: 3,
+      evaluationMode: "quick",
     });
 
     const durationMs = Date.now() - startedAt;
 
     const benchmarkScore = scoreBenchmarkResult(
-        evaluation,
-        testCase.expectedCharacteristics
-      );
+      evaluation,
+      testCase.expectedCharacteristics
+    );
 
-      results.push({
-        concept: testCase.concept,
-        evaluation,
-        expected: testCase.expectedCharacteristics,
-        durationMs,
-        benchmarkScore,
-      });
-
-    
+    results.push({
+      concept: testCase.concept,
+      evaluation,
+      expected: testCase.expectedCharacteristics,
+      durationMs,
+      benchmarkScore,
+    });
   }
 
   return results;

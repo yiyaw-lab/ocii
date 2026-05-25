@@ -1,23 +1,7 @@
-type EvaluationResult = {
-  relatedConcepts: string[];
-  dimensionEvaluations: {
-    dimension: string;
-    score: number;
-    evaluatorConfidence: string;
-    evidence: string[];
-    misconceptions: string[];
-    missingNuance: string[];
-    rationale: string;
-    nextTestPrompt: string;
-  }[];
-  summary: {
-    strongestDimension: string;
-    weakestDimension: string;
-    calibrationAssessment: string;
-    overallFeedback: string;
-    nextLearningStep: string;
-  };
-};
+import { z } from "zod";
+import { EvaluationOutputSchema } from "@/lib/schemas/cognition";
+
+type EvaluationResult = z.infer<typeof EvaluationOutputSchema>;
 
 function cleanText(text: string) {
   return text
