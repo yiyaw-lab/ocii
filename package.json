@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "benchmark": "tsx src/lib/evaluation/runBenchmarksCli.ts"
+    "benchmark": "dotenv -e .env.local -- tsx src/lib/evaluation/runBenchmarksCli.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.1",
@@ -24,6 +24,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "1.0.0",
+    "dotenv-cli": "^11.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
     "tailwindcss": "^4",
