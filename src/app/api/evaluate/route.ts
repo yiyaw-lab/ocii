@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { runEvaluation } from "@/lib/evaluation/runEvaluation";
 import { saveEvaluation } from "@/lib/db/evaluations";
 import { EvaluationInputSchema } from "@/lib/schemas/cognition";
+import { detectAdversarialRisk } from "@/lib/evaluation/adversarialDetection";
 
 export async function POST(req: Request) {
   try {
@@ -9,6 +10,16 @@ export async function POST(req: Request) {
     const parsed = EvaluationInputSchema.parse(body);
 
     const result = await runEvaluation(parsed);
+
+    const adversarialDetection = detectAdversarialRisk(
+      {
+        concept: parsed.concept,
+        sourceText: parsed.sourceText,
+        userExplanation: parsed.userExplanation,
+        confidence: parsed.confidence,
+      },
+      result
+    );
 
     const saved = await saveEvaluation({
       concept: parsed.concept,
@@ -19,7 +30,7 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({
-      evaluation: result,
+      evaluation: { ...result, adversarialDetection },
       saved,
     });
   } catch (error) {

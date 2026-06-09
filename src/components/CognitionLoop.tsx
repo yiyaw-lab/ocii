@@ -13,6 +13,18 @@ type DimensionEvaluation = {
   nextTestPrompt: string;
 };
 
+type AdversarialDetection = {
+  fluencyRiskScore: number;
+  paraphraseRiskScore: number;
+  hallucinationRiskScore: number;
+  transferBluffRiskScore: number;
+  vagueJargonRiskScore: number;
+  causalInversionRiskScore: number;
+  overallAdversarialRiskScore: number;
+  riskFlags: string[];
+  recommendedPressureTest: string;
+};
+
 type EvaluationData = {
   overallUnderstandingScore?: number;
   relatedConcepts?: string[];
@@ -22,6 +34,7 @@ type EvaluationData = {
     calibrationAssessment?: string;
     nextLearningStep?: string;
   };
+  adversarialDetection?: AdversarialDetection;
 };
 
 export function CognitionLoop() {
@@ -215,6 +228,10 @@ function EvaluationResult({ data }: { data: EvaluationData }) {
         </div>
       )}
 
+      {data.adversarialDetection && data.adversarialDetection.overallAdversarialRiskScore >= 0.40 && (
+        <RiskBlock detection={data.adversarialDetection} />
+      )}
+
       <details className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5">
         <summary className="cursor-pointer text-sm font-medium text-neutral-300">
           View full cognitive audit
@@ -238,6 +255,10 @@ function EvaluationResult({ data }: { data: EvaluationData }) {
               <ResultBlock title="Next Test Prompt" text={item.nextTestPrompt} />
             </div>
           ))}
+
+          {data.adversarialDetection && (
+            <AdversarialAudit detection={data.adversarialDetection} />
+          )}
         </div>
       </details>
     </section>
@@ -273,6 +294,59 @@ function ResultList({ title, items }: { title: string; items?: string[] }) {
           <li key={item}>{item}</li>
         ))}
       </ul>
+    </div>
+  );
+}
+
+function RiskBlock({ detection }: { detection: AdversarialDetection }) {
+  const isHigh = detection.overallAdversarialRiskScore >= 0.70;
+  const borderColor = isHigh ? "border-red-900" : "border-amber-900";
+  const bgColor = isHigh ? "bg-red-950/40" : "bg-amber-950/30";
+  const labelColor = isHigh ? "text-red-400" : "text-amber-400";
+  const label = isHigh ? "High integrity risk" : "Integrity risk flagged";
+
+  return (
+    <div className={`space-y-3 rounded-2xl border ${borderColor} ${bgColor} p-5`}>
+      <div className="flex items-center justify-between gap-4">
+        <p className={`text-xs uppercase tracking-wide font-medium ${labelColor}`}>{label}</p>
+        <span className={`rounded-full border ${borderColor} px-3 py-1 text-xs ${labelColor}`}>
+          {(detection.overallAdversarialRiskScore * 100).toFixed(0)}% risk
+        </span>
+      </div>
+      <div>
+        <p className="text-xs uppercase tracking-wide text-neutral-500">Recommended pressure test</p>
+        <p className="mt-2 text-sm leading-relaxed text-neutral-200">{detection.recommendedPressureTest}</p>
+      </div>
+    </div>
+  );
+}
+
+function AdversarialAudit({ detection }: { detection: AdversarialDetection }) {
+  const subscores: { label: string; value: number }[] = [
+    { label: "Fluency risk", value: detection.fluencyRiskScore },
+    { label: "Paraphrase risk", value: detection.paraphraseRiskScore },
+    { label: "Hallucination risk", value: detection.hallucinationRiskScore },
+    { label: "Transfer bluff risk", value: detection.transferBluffRiskScore },
+    { label: "Vague jargon risk", value: detection.vagueJargonRiskScore },
+    { label: "Causal inversion risk", value: detection.causalInversionRiskScore },
+  ];
+
+  return (
+    <div className="space-y-3 rounded-2xl border border-neutral-800 bg-neutral-900 p-4">
+      <p className="text-sm font-semibold text-white">Adversarial Risk Analysis</p>
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {subscores.map(({ label, value }) => (
+          <div key={label} className="rounded-xl border border-neutral-800 bg-neutral-950 p-3">
+            <p className="text-xs text-neutral-500">{label}</p>
+            <p className={`mt-1 text-sm font-medium ${value >= 0.40 ? "text-amber-300" : "text-neutral-300"}`}>
+              {(value * 100).toFixed(0)}%
+            </p>
+          </div>
+        ))}
+      </div>
+      {detection.riskFlags.length > 0 && (
+        <ResultList title="Risk flags" items={detection.riskFlags} />
+      )}
     </div>
   );
 }
