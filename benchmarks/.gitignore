@@ -1,0 +1,3 @@
+# Timestamped run snapshots accumulate here; not tracked by default.
+# The baselines/ directory IS tracked — commit baselines intentionally.
+snapshots/

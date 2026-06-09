@@ -34,5 +34,13 @@ export function normalizeEvaluation(result: EvaluationResult): EvaluationResult 
       overallFeedback: cleanText(result.summary.overallFeedback),
       nextLearningStep: cleanText(result.summary.nextLearningStep),
     },
+
+    ...(result.abstractionPressureTest && {
+      abstractionPressureTest: {
+        challenge: cleanText(result.abstractionPressureTest.challenge),
+        pressureType: result.abstractionPressureTest.pressureType,
+        requiredElements: cleanList(result.abstractionPressureTest.requiredElements),
+      },
+    }),
   };
 }

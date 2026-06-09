@@ -5,10 +5,12 @@ import {
   detectAdversarialRisk,
   type AdversarialDetectionResult,
 } from "@/lib/evaluation/adversarialDetection";
+import { scoreAbstractionPressure } from "@/lib/ai/scoreAbstractionPressure";
 
 type BenchmarkScore = ReturnType<typeof scoreBenchmarkResult>;
 
 type BenchmarkResult = {
+  category: (typeof benchmarkCases)[number]["category"];
   concept: string;
   evaluationMode: string;
   isAdversarial: boolean;
@@ -17,6 +19,8 @@ type BenchmarkResult = {
   expected: (typeof benchmarkCases)[number]["expectedCharacteristics"];
   durationMs: number;
   benchmarkScore: BenchmarkScore;
+  // Abstraction-pressure scoring, present only when the case carries a fixture.
+  pressureScore?: Awaited<ReturnType<typeof scoreAbstractionPressure>>;
   // Adversarial risk detection is a separate second-stage analysis.
   // It does NOT modify benchmarkScore or the evaluation output.
   adversarialDetection: AdversarialDetectionResult;
@@ -29,35 +33,55 @@ export async function runBenchmarks() {
 
   for (const testCase of allCases) {
     const startedAt = Date.now();
-    const mode = testCase.evaluationMode ?? "quick";
+    const mode = testCase.evaluationMode;
 
     const evaluation = await runEvaluation({
       concept: testCase.concept,
       sourceText: testCase.sourceMaterial,
       userExplanation: testCase.userExplanation,
-      confidence: 3,
+      confidence: testCase.confidence,
       evaluationMode: mode,
     });
+
+    // Abstraction-pressure cases carry a scripted challenge/response that the
+    // pressure scorer evaluates without access to the source material.
+    let pressureScore: Awaited<ReturnType<typeof scoreAbstractionPressure>> | undefined;
+    if (testCase.abstractionPressure) {
+      const { challenge, pressureType, response } = testCase.abstractionPressure;
+      pressureScore = await scoreAbstractionPressure({
+        concept: testCase.concept,
+        challenge,
+        pressureType,
+        response,
+      });
+    }
 
     const durationMs = Date.now() - startedAt;
 
     const benchmarkScore = scoreBenchmarkResult(
       evaluation,
       testCase.expectedCharacteristics,
-      testCase.isAdversarial ?? false
+      testCase.isAdversarial ?? false,
+      pressureScore,
+      testCase.abstractionPressure
+        ? { expectedPressureScoreRange: testCase.abstractionPressure.expectedPressureScoreRange }
+        : undefined
     );
 
+    // Adversarial risk detection runs on every case as an independent second-stage
+    // analysis; it never alters benchmarkScore or the evaluation.
     const adversarialDetection = detectAdversarialRisk(
       {
         concept: testCase.concept,
         sourceText: testCase.sourceMaterial,
         userExplanation: testCase.userExplanation,
-        confidence: 3,
+        confidence: testCase.confidence,
       },
       evaluation
     );
 
     results.push({
+      category: testCase.category,
       concept: testCase.concept,
       evaluationMode: mode,
       isAdversarial: testCase.isAdversarial ?? false,
@@ -66,6 +90,7 @@ export async function runBenchmarks() {
       expected: testCase.expectedCharacteristics,
       durationMs,
       benchmarkScore,
+      pressureScore,
       adversarialDetection,
     });
   }

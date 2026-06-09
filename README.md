@@ -79,8 +79,45 @@ Returns per-case results and a top-level `allPassed` field. Each benchmark case 
 - Expected strong and weak dimensions
 - Pass/fail consistency threshold
 - Latency expectation
+- Abstraction pressure detection (for `abstraction_pressure` cases — see below)
 
 Run benchmarks to detect evaluator drift, calibration shifts, or regressions after rubric or model changes.
+
+Benchmark cases are grouped into five categories:
+
+| Category | What it tests |
+|---|---|
+| `strong_understanding` | Evaluator correctly scores genuine multi-dimensional understanding high |
+| `surface_paraphrase` | Evaluator behavior when the explanation is a near-verbatim copy of the source |
+| `confident_but_wrong` | Evaluator correctly identifies confident misconceptions |
+| `good_recall_weak_transfer` | Evaluator penalizes lack of transfer while rewarding retrieval |
+| `abstraction_pressure` | Pressure scorer correctly detects paraphrase/evasion when source is absent |
+
+For `abstraction_pressure` cases: a benchmark **PASS** means the pressure scorer correctly caught a low-quality response. The expected pressure score range is low (≤50) because the scripted response is intentionally bad. Low pressureScore = detector working, not learner succeeding.
+
+---
+
+## Abstraction Pressure Testing
+
+Standard rubric evaluation has access to the source material. This creates a structural limitation: a learner who copies the definition and a learner who genuinely understands it produce explanations that score nearly identically on accuracy, mechanistic reasoning, and retrieval — because the definition itself encodes the mechanism. Paraphrase inherits correctness for free.
+
+Abstraction pressure tests are a second-stage signal designed to break this symmetry.
+
+### How it works
+
+1. After full-mode evaluation, the evaluator generates one **abstraction pressure challenge** — a question that cannot be answered by restating the definition.
+2. The challenge requires one of: **analogy** (from a different domain), **transfer** (novel application with explicit role mapping), **compression** (essential logical structure in different words), or **reframing** (explain to a skeptic or non-expert).
+3. The learner responds to the challenge.
+4. A separate scorer evaluates the response. **The pressure scorer does not receive the source material.** This prevents paraphrase from inheriting the definition's correctness.
+
+### pressureScore
+
+pressureScore (0–100) measures whether the challenge was genuinely met:
+
+- **High (≥60):** evidence of genuine abstraction, transfer, or compression — structural knowledge the definition alone cannot supply
+- **Low (≤40):** challenge evasion — definition restated, borrowed sophistication without substance, or vague philosophical language that ignores the specific ask
+
+A high overall evaluation score paired with a low pressureScore indicates the original explanation may have been inflated by surface fluency.
 
 ---
 
@@ -99,13 +136,13 @@ NEXT_PUBLIC_SUPABASE_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 ```
 
-Place these in `.env.local` (gitignored). The benchmark CLI loads them via `dotenv-cli`.
+Place these in `.env.local` (gitignored).
 
 ### Development
 
 ```bash
 npm test            # unit + scoring suite (vitest)
-npm run benchmark   # evaluator benchmark suite (CLI)
+npm run benchmark   # benchmark suite (needs the dev server running)
 npm run lint        # eslint
 ```
 
@@ -133,6 +170,8 @@ Evaluations are persisted to Supabase. The schema evolved from a flat v0 score f
 - Benchmark case coverage is small; calibration is experimental
 - Evaluator variance across runs is under active investigation
 - Quick and full mode benchmark thresholds are not yet separately defined
+- Quick mode cannot reliably detect paraphrase — it lacks enough structural signal
+- Abstraction pressure testing is a second-stage interaction: it needs a learner response to the generated challenge before a `pressureScore` is available
 
 ---
 

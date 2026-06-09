@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "benchmark": "dotenv -e .env.local -- tsx src/lib/evaluation/runBenchmarksCli.ts"
+    "benchmark": "node scripts/benchmark.mjs",
+    "benchmark:baseline": "node scripts/benchmark.mjs --baseline"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.106.1",
