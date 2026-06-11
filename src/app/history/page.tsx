@@ -31,7 +31,7 @@ export default async function HistoryPage() {
             return (
               <article
                 key={evaluation.id}
-                className="rounded-3xl border border-neutral-800 bg-neutral-900 p-6"
+                className="rounded-3xl border border-neutral-800 bg-neutral-900 p-6 shadow-2xl"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -43,9 +43,9 @@ export default async function HistoryPage() {
                     </h2>
                   </div>
 
-                  <div className="rounded-2xl bg-neutral-950 px-4 py-3 text-center">
-                    <p className="text-xs text-neutral-500">Score</p>
-                    <p className="text-2xl font-semibold">{score}</p>
+                  <div className="rounded-2xl border border-neutral-700 bg-neutral-950 px-5 py-4 text-center">
+                    <p className="text-xs uppercase tracking-wide text-neutral-500">Score</p>
+                    <p className="mt-1 text-4xl font-semibold text-white">{score}</p>
                     <p className="text-xs text-neutral-500">/100</p>
                   </div>
                 </div>
