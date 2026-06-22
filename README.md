@@ -1,5 +1,8 @@
 # OCII
 
+[![CI](https://github.com/yiyaw-lab/ocii/actions/workflows/ci.yml/badge.svg)](https://github.com/yiyaw-lab/ocii/actions/workflows/ci.yml)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+
 **Open Cognitive Integrity Infrastructure** — a research platform for evaluating genuine human understanding rather than fluent AI-assisted output.
 
 ---
@@ -9,6 +12,36 @@
 OCII takes a free-text response to a concept prompt and evaluates it across seven cognitive dimensions using an LLM rubric. Dimension scores feed into a deterministic weighted scoring pipeline. The overall score is computed without LLM involvement — separating evaluator judgment from aggregation to limit hallucinated percentages and inconsistency drift.
 
 A second-stage adversarial detector then inspects the response for signals that a high score may reflect surface fluency — paraphrase, hallucinated specifics, vague jargon, or transfer bluffing — rather than genuine understanding. Its risk scores are reported alongside the receipt and never alter the understanding score.
+
+---
+
+## How It Works
+
+A response flows through a single orchestration boundary (`runEvaluation`) that keeps LLM judgment, schema validation, normalization, and deterministic scoring as separate stages — so model output never computes the final percentage. Two independent second-stage detectors (adversarial risk, abstraction pressure) inspect the result without ever altering the understanding score. A benchmark harness evaluates the evaluator itself.
+
+```mermaid
+flowchart TD
+    UI["Frontend<br/>CognitionLoop.tsx"] --> API["API routes<br/>/api/evaluate · /api/benchmarks"]
+    API --> ORCH["Orchestration<br/>runEvaluation.ts"]
+
+    ORCH --> VALIN["Input validation (zod)<br/>cognition.ts"]
+    VALIN --> LLM["LLM cognitive evaluation<br/>evaluateUnderstanding.ts · gpt-4.1-mini"]
+    LLM --> RUBRIC["Rubric<br/>rubric.ts · 7 dimensions"]
+    LLM --> VALOUT["Output validation (zod)<br/>cognition.ts"]
+    VALOUT --> NORM["Normalization<br/>normalizeEvaluation.ts"]
+    NORM --> SCORE["Deterministic scoring<br/>calculateOverallScore.ts"]
+    SCORE --> PERSIST["Persistence<br/>Supabase · evaluations table"]
+    PERSIST --> RECEIPT["Receipt / cognitive audit UI"]
+
+    SCORE --> ADV["Adversarial risk detector<br/>adversarialDetection.ts"]
+    SCORE --> PRESS["Abstraction pressure<br/>scoreAbstractionPressure.ts"]
+    ADV -.->|"risk profile, never alters score"| RECEIPT
+    PRESS -.->|"pressureScore, never alters score"| RECEIPT
+
+    API --> BENCH["Benchmark runner<br/>runBenchmarks.ts"]
+    BENCH --> ORCH
+    BENCH --> BSCORE["Benchmark scoring<br/>scoreBenchmarkResult.ts"]
+```
 
 ---
 
